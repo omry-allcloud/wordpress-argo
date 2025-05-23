@@ -1,3 +1,6 @@
+# Instead of overriding the entire deployment template,
+# let's just add database environment variables to your values.yaml
+
 wordpressUsername: admin
 wordpressPassword: "password"
 wordpressEmail: "admin@example.com"
@@ -5,48 +8,11 @@ wordpressFirstName: "WordPress"
 wordpressLastName: "Admin"
 wordpressBlogName: "WordPress Site"
 
-# Disable both external database AND MariaDB - we'll use env vars instead
-externalDatabase:
-  host: localhost  # Dummy value, will be overridden
-  port: 3306
-  user: dummy      # Dummy value, will be overridden  
-  password: dummy  # Dummy value, will be overridden
-  database: wordpress
-
 # Override default MariaDB installation with external RDS
 mariadb:
   enabled: false
 
-extraEnvVars:
-  # Database connection from your ConfigMap and Secret
-  - name: WORDPRESS_DB_HOST
-    valueFrom:
-      configMapKeyRef:
-        name: wordpress-db-config
-        key: db_host
-  - name: WORDPRESS_DB_USER
-    valueFrom:
-      secretKeyRef:
-        name: wordpress-db-credentials
-        key: username
-  - name: WORDPRESS_DB_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: wordpress-db-credentials
-        key: password
-  - name: WORDPRESS_DB_NAME
-    valueFrom:
-      configMapKeyRef:
-        name: wordpress-db-config
-        key: db_name
-  - name: WORDPRESS_DB_PORT
-    valueFrom:
-      configMapKeyRef:
-        name: wordpress-db-config
-        key: db_port
-  # Additional WordPress settings
-  - name: WORDPRESS_DEBUG
-    value: "false"
+usePasswordFiles: false
 
 # Enhanced affinity rules for better distribution
 affinity:
@@ -102,10 +68,11 @@ ingress:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
     alb.ingress.kubernetes.io/healthcheck-path: /wp-login.php
-    hostname: "*.amazonaws.com"
-    path: "*"
+  hostname: "*.amazonaws.com"
+  path: "/"
+  pathType: Prefix
 
-# Creats a mount on /bitnami/wordpress which is used as a sym link on /var/www/html for compatiblity
+# Creates a mount on /bitnami/wordpress which is used as a sym link on /var/www/html for compatibility
 persistence:
   enabled: true
   storageClass: "efs-sc"

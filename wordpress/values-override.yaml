@@ -1,0 +1,90 @@
+# Instead of overriding the entire deployment template,
+# let's just add database environment variables to your values.yaml
+
+wordpressUsername: admin
+wordpressPassword: "password"
+wordpressEmail: "admin@example.com"
+wordpressFirstName: "WordPress"
+wordpressLastName: "Admin"
+wordpressBlogName: "WordPress Site"
+
+# Override default MariaDB installation with external RDS
+mariadb:
+  enabled: false
+
+usePasswordFiles: false
+
+# Enhanced affinity rules for better distribution
+affinity:
+  # Prevent pods from running on the same node (hard requirement)
+  podAntiAffinity:
+    # Zone-level anti-affinity (soft preference with high weight)
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 90
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - wordpress
+        topologyKey: topology.kubernetes.io/zone
+    
+    # Node-level anti-affinity (hard requirement)
+    requiredDuringSchedulingIgnoredDuringExecution:
+    - labelSelector:
+        matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: In
+          values:
+          - wordpress
+      topologyKey: kubernetes.io/hostname
+
+# Enhanced topology spread constraints
+topologySpreadConstraints:
+# Zone-level spread
+- maxSkew: 1
+  topologyKey: topology.kubernetes.io/zone
+  whenUnsatisfiable: ScheduleAnyway
+  labelSelector:
+    matchLabels:
+      app.kubernetes.io/name: wordpress
+# Node-level spread
+- maxSkew: 1
+  topologyKey: kubernetes.io/hostname
+  whenUnsatisfiable: DoNotSchedule
+  labelSelector:
+    matchLabels:
+      app.kubernetes.io/name: wordpress
+
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/healthcheck-path: /wp-login.php
+  hostname: "*.amazonaws.com"
+  path: "/"
+  pathType: Prefix
+
+# Creates a mount on /bitnami/wordpress which is used as a sym link on /var/www/html for compatibility
+persistence:
+  enabled: true
+  storageClass: "efs-sc"
+  accessMode: ReadWriteMany
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "250m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+# Increase replica count for HA
+replicaCount: 2

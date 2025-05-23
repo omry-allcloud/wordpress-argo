@@ -8,9 +8,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/omry-allcloud/wordpress-argo.git
+    repoURL: https://github.com/omrylern/wordpress-argo.git
     targetRevision: main
-    path: wordpress-config
+    path: wordpress
     helm:
       valueFiles:
         - values.yaml
