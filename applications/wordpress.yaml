@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/omry-allcloud/wordpress-argo.git
     targetRevision: main
-    path: wordpress-helm
+    path: wordpress-config
   destination:
     server: https://kubernetes.default.svc
     namespace: wordpress
