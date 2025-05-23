@@ -8,12 +8,13 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/omrylern/wordpress-argo.git
+    repoURL: https://github.com/omry-allcloud/wordpress-argo.git
     targetRevision: main
     path: wordpress
     helm:
       valueFiles:
         - values.yaml
+        - values-override.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: wordpress
